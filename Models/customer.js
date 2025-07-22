@@ -30,39 +30,54 @@ const customerSchema = new Schema({
   ],
 });
 
+//Mongoose middleware pre and post two types are there
+// customerSchema.pre("findOneAndDelete", async () => {
+//   console.log("PRE MIDDLEWARE");
+// });
+
+customerSchema.post("findOneAndDelete", async (customer) => {
+  if (customer.orders.length) {
+    let res = await Order.deleteMany({
+      _id: {
+        $in: customer.orders,
+      },
+    });
+    console.log(res);
+  }
+});
+
 const Order = mongoose.model("Order", orderSchema);
 const Customer = mongoose.model("Customer", customerSchema);
 
+// Function
 const findCustomer = async () => {
-//   let cust1 = new Customer({
-//     name: "Jay Kumar",
-//   });
-
-//   let order1 = await Order.findOne({ item: "Chips" });
-//   let order2 = await Order.findOne({ item: "Chocolates" });
-
-//   cust1.orders.push(order1);
-//   cust1.orders.push(order2);
-
-//   let result = await cust1.save();
-//   console.log(result);
-
-
-// We can use downside  .find({}) and it will only send customer name with orderid only  and we want to use this comment out above from const addCustomer
-  let result = await Customer .find({}).populate("orders");
+  let result = await Customer.find({}).populate("orders");
   console.log(result[0]);
-  
 };
-findCustomer();
-// const addOrders = async ()=>{
-//     let res  = await Order.insertMany([
-//         {item:"Samosa", price:12},
-//         {item:"Chips", price:10},
-//         {item:"Chocolates", price:40},
+// findCustomer();
 
-//     ]);
-//     console.log(res);
+const addCust = async () => {
+  let newCust = new Customer({
+    name: "Karan Arjun",
+  });
 
-// }
+  let newOrder = new Order({
+    item: "Burger",
+    price: 250,
+  });
 
-// addOrders();
+  newCust.orders.push(newOrder);
+
+  await newOrder.save();
+  await newCust.save();
+  console.log("Added new customer");
+};
+
+//deleteing Customer
+const delCust = async () => {
+  let data = await Customer.findByIdAndDelete("687f7324350bb9e1d280f539");
+  console.log(data);
+};
+
+// addCust();
+delCust();
